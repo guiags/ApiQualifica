@@ -25,8 +25,8 @@ class PessoaController extends Controller
             'telefone' => 'required|string|max:20',
             'contato' => 'required|string|max:150',
             'possui_passagem_criminal' => 'required|boolean',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+            'latitude' => 'numeric',
+            'longitude' => 'numeric',
             // Valida que o campo é um array de imagens
             'fotos' => 'required|array|min:1', 
             'fotos.*' => 'image|mimes:jpeg,png,jpg|max:4096', 
