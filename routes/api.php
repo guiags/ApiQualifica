@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PessoaController;
 
+
 // Rota pública para autenticação (Login)
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -12,6 +13,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     
     // Rota para efetuar o cadastro completo vindo do aplicativo
-    Route::post('/cadastros', [PessoaController::class, 'store']);
+    Route::post('/pessoas', [PessoaController::class, 'store']);
     
 });

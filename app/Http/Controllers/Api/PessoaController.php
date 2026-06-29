@@ -11,7 +11,7 @@ class PessoaController extends Controller
 {
     public function store(Request $request)
     {
-        // 1. Validação rigorosa dos dados recebidos do App Mobile
+        // 1. Validação agora espera um array de fotos
         $validados = $request->validate([
             'cpf' => 'required|string|max:14|unique:pessoas_cadastradas,cpf',
             'rg' => 'required|string|max:20',
@@ -25,35 +25,43 @@ class PessoaController extends Controller
             'telefone' => 'required|string|max:20',
             'contato' => 'required|string|max:150',
             'possui_passagem_criminal' => 'required|boolean',
-            'foto' => 'required|image|mimes:jpeg,png,jpg|max:4096', // Limite de 4MB
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
+            // Valida que o campo é um array de imagens
+            'fotos' => 'required|array|min:1', 
+            'fotos.*' => 'image|mimes:jpeg,png,jpg|max:4096', 
         ]);
 
         try {
-            // 2. Upload da foto de forma segura (Armazenada na pasta storage/app/public/fotos)
-            if ($request->hasFile('foto')) {
-                $caminhoFoto = $request->file('foto')->store('fotos', 'public');
-                // Gera a URL pública para o aplicativo mobile conseguir acessar depois
-                $validados['foto_url'] = Storage::url($caminhoFoto);
+            // 2. Removemos as fotos do array $validados para criar a Pessoa primeiro
+            $dadosPessoa = $request->except('fotos');
+            $dadosPessoa['criado_por'] = $request->user()->id;
+
+            // 3. Salva a Pessoa
+            $pessoa = Pessoa::create($dadosPessoa);
+
+            // 4. Loop para processar múltiplas fotos
+            if ($request->hasFile('fotos')) {
+                foreach ($request->file('fotos') as $foto) {
+                    $caminho = $foto->store('fotos', 'public');
+                    
+                    // Salva na tabela 'fotos' (relacionada a esta pessoa)
+                    $pessoa->fotos()->create([
+                        'url' => Storage::url($caminho)
+                    ]);
+                }
             }
-
-            // 3. Vincula automaticamente o ID do usuário autenticado no App
-            $validados['criado_por'] = $request->user()->id;
-
-            // 4. Salva no banco de dados através do Model
-            $pessoa = Pessoa::create($validados);
 
             return response()->json([
                 'status' => 'sucesso',
                 'mensagem' => 'Cadastro realizado com sucesso.',
-                'dados' => $pessoa
+                'dados' => $pessoa->load('fotos') // Retorna a pessoa com a lista de fotos vinculadas
             ], 201);
 
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'erro',
-                'mensagem' => 'Incapaz de salvar o registo.',
+                'mensagem' => 'Incapaz de salvar o registro.',
                 'detalhe' => $e->getMessage()
             ], 500);
         }
