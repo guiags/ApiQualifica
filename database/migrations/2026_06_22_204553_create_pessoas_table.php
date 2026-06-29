@@ -16,15 +16,13 @@ return new class extends Migration
             $table->string('nome_mae');
             $table->text('endereco');
             $table->string('estado_civil', 30);
-            $table->string('profissao', 100);
+            $table->string('profissao', 100)->nullable();
             $table->string('escolaridade', 100);
             $table->string('email', 150)->nullable();
             $table->string('telefone', 20);
-            $table->string('contato', 150);
+            $table->string('contato', 150)->nullable();
             $table->boolean('possui_passagem_criminal')->default(false);
-            $table->string('foto_url');
-            $table->decimal('latitude', 10, 8);
-            $table->decimal('longitude', 11, 8);
+            $table->string('foto_url')->nullable();
             
             // Relacionamento com o usuário que realizou o cadastro
             $table->foreignId('criado_por')->constrained('users')->onDelete('cascade');
