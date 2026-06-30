@@ -100,11 +100,24 @@ class PessoaController extends Controller
             
             // Validação simplificada para o update
             $validados = $request->validate([
-                'nome' => 'sometimes|string|max:255',
-                'endereco' => 'sometimes|string',
-                'telefone' => 'sometimes|string|max:20',
-                // ... adicione outros campos conforme a necessidade
+                'cpf' => 'required|string|max:14|unique:pessoas_cadastradas,cpf',
+                'rg' => 'required|string|max:20',
+                'nome' => 'required|string|max:255',
+                'nome_mae' => 'required|string|max:255',
+                'endereco' => 'required|string',
+                'estado_civil' => 'required|string|max:30',
+                'profissao' => 'string|max:100',
+                'escolaridade' => 'string|max:100',
+                'email' => 'nullable|email|max:150',
+                'telefone' => 'required|string|max:20',
+                'contato' => 'string|max:150',
+                'possui_passagem_criminal' => 'required|boolean',
+                'latitude' => 'numeric',
+                'longitude' => 'numeric',
+                'fotos' => 'array|min:1', 
+                'fotos.*' => 'image|mimes:jpeg,png,jpg|max:4096'
             ]);
+            
 
             $pessoa->update($validados);
 
