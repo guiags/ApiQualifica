@@ -66,4 +66,29 @@ class PessoaController extends Controller
             ], 500);
         }
     }
+
+
+    public function index(Request $request)
+    {
+        try {
+            // Buscamos as pessoas criadas pelo usuário logado
+            // O 'with('fotos')' carrega as fotos automaticamente junto com a pessoa
+            $pessoas = Pessoa::with('fotos')
+                ->where('criado_por', $request->user()->id)
+                ->orderBy('created_at', 'desc') // Mostra os mais recentes primeiro
+                ->get();
+
+            return response()->json([
+                'status' => 'sucesso',
+                'dados' => $pessoas
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'erro',
+                'mensagem' => 'Erro ao buscar registros.',
+                'detalhe' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
