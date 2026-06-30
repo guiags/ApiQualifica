@@ -98,32 +98,51 @@ class PessoaController extends Controller
         try {
             $pessoa = Pessoa::where('criado_por', $request->user()->id)->findOrFail($id);
             
-            // Validação simplificada para o update
+            // Validação ajustada para o cenário de Edição
             $validados = $request->validate([
-                'cpf' => 'required|string|max:14|unique:pessoas_cadastradas,cpf',
+                // CORREÇÃO 1: Força o Laravel a ignorar este registro atual na checagem de duplicidade
+                'cpf' => 'required|string|max:14|unique:pessoas_cadastradas,cpf,' . $id,
                 'rg' => 'required|string|max:20',
                 'nome' => 'required|string|max:255',
                 'nome_mae' => 'required|string|max:255',
                 'endereco' => 'required|string',
                 'estado_civil' => 'required|string|max:30',
-                'profissao' => 'string|max:100',
-                'escolaridade' => 'string|max:100',
+                'profissao' => 'nullable|string|max:100',
+                'escolaridade' => 'nullable|string|max:100',
                 'email' => 'nullable|email|max:150',
                 'telefone' => 'required|string|max:20',
-                'contato' => 'string|max:150',
+                'contato' => 'nullable|string|max:150',
                 'possui_passagem_criminal' => 'required|boolean',
-                'latitude' => 'numeric',
-                'longitude' => 'numeric',
-                'fotos' => 'array|min:1', 
+                'latitude' => 'nullable|numeric',
+                'longitude' => 'nullable|numeric',
+                // CORREÇÃO 2: Usa 'sometimes' para que a validação não falhe se o app não enviar fotos no PUT
+                'fotos' => 'sometimes|array|min:1', 
                 'fotos.*' => 'image|mimes:jpeg,png,jpg|max:4096'
             ]);
             
+            // CORREÇÃO 3: Filtra o array para não tentar salvar a chave 'fotos' direto na tabela de pessoas
+            $dadosParaSalvar = \Illuminate\Support\Arr::except($validados, ['fotos']);
 
-            $pessoa->update($validados);
+            // Executa a atualização com os dados limpos
+            $pessoa->update($dadosParaSalvar);
 
-            return response()->json(['status' => 'sucesso', 'dados' => $pessoa], 200);
+            return response()->json([
+                'status' => 'sucesso', 
+                'dados' => $pessoa->load('fotos')
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // CORREÇÃO 4: Captura específica de validação para devolver os campos com erro ao Flutter
+            return response()->json([
+                'status' => 'erro',
+                'mensagem' => 'Dados inválidos.',
+                'erros' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'erro', 'mensagem' => $e->getMessage()], 500);
+            return response()->json([
+                'status' => 'erro', 
+                'mensagem' => $e->getMessage()
+            ], 500);
         }
     }
 
