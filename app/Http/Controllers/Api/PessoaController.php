@@ -91,4 +91,39 @@ class PessoaController extends Controller
             ], 500);
         }
     }
+
+    // Método para Atualizar
+    public function update(Request $request, $id)
+    {
+        try {
+            $pessoa = Pessoa::where('criado_por', $request->user()->id)->findOrFail($id);
+            
+            // Validação simplificada para o update
+            $validados = $request->validate([
+                'nome' => 'sometimes|string|max:255',
+                'endereco' => 'sometimes|string',
+                'telefone' => 'sometimes|string|max:20',
+                // ... adicione outros campos conforme a necessidade
+            ]);
+
+            $pessoa->update($validados);
+
+            return response()->json(['status' => 'sucesso', 'dados' => $pessoa], 200);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'erro', 'mensagem' => $e->getMessage()], 500);
+        }
+    }
+
+    // Método para Excluir
+    public function destroy(Request $request, $id)
+    {
+        try {
+            $pessoa = Pessoa::where('criado_por', $request->user()->id)->findOrFail($id);
+            $pessoa->delete(); // O 'onDelete cascade' no banco apagará as fotos vinculadas
+
+            return response()->json(['status' => 'sucesso', 'mensagem' => 'Registro excluído.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'erro', 'mensagem' => $e->getMessage()], 500);
+        }
+    }
 }

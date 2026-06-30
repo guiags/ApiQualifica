@@ -15,5 +15,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rota para efetuar o cadastro completo vindo do aplicativo
     Route::post('/pessoas', [PessoaController::class, 'store']);
     Route::middleware('auth:sanctum')->get('/pessoas', [PessoaController::class, 'index']);
+    Route::middleware('auth:sanctum')->put('/pessoas/{id}', [PessoaController::class, 'update']);
+    Route::middleware('auth:sanctum')->delete('/pessoas/{id}', [PessoaController::class, 'destroy']);
     
 });
